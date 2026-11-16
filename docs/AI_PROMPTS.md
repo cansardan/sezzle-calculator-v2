@@ -14,4 +14,6 @@ The full assignment prompt is committed verbatim as [`AI_PROMPT.md`](AI_PROMPT.m
 
    (Answers to the agent's questions: build fresh in this folder in a new private repository, no container registry publishing, no live deployment.)
 
+5. The independent reviewer prompt used to grade this submission is in [`AI_PROMPT_REVIEW.md`](AI_PROMPT_REVIEW.md).
+
 No other prompts were used, and no fix-up prompts have been needed so far.
