@@ -1,0 +1,16 @@
+node_modules/
+dist/
+coverage/
+coverage.out
+coverage.html
+*.test
+*.exe
+*.out
+/backend/server
+/backend/bin/
+.env
+.env.*
+.vscode/
+.idea/
+*.swp
+.DS_Store
