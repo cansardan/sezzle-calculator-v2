@@ -69,6 +69,40 @@ describe('display sizing', () => {
   })
 })
 
+describe('display CSS height', () => {
+  const sizeClasses = [
+    '.display__value--md',
+    '.display__value--sm',
+    '.display__value--xs',
+    '.display__value--xxs',
+    '.display__value--xxxs',
+    '.display__value--busy',
+    '.display__expression--sm',
+    '.display__expression--xs',
+  ]
+
+  it.each(['.display__value', '.display__expression'])(
+    '%s has a fixed height equal to its line height, so font changes never resize the display',
+    (selector) => {
+      const body = ruleBody(selector)
+      const height = /(?:^|[\s;])height:\s*([\d.]+rem)/.exec(body)?.[1]
+      const lineHeight = /line-height:\s*([\d.]+rem)/.exec(body)?.[1]
+      expect(height).toBeDefined()
+      expect(lineHeight).toBe(height)
+      expect(body).not.toMatch(/min-height/)
+    },
+  )
+
+  it.each(sizeClasses)('%s only changes font size, never height', (selector) => {
+    expect(ruleBody(selector)).not.toMatch(/height/)
+  })
+
+  it('keeps the largest value font inside the fixed height', () => {
+    const height = Number(/(?:^|[\s;])height:\s*([\d.]+)rem/.exec(ruleBody('.display__value'))?.[1]) * REM_PX
+    expect(fontSizePx('.display__value')).toBeLessThanOrEqual(height)
+  })
+})
+
 describe('display CSS', () => {
   it.each(['.display__value', '.display__expression'])('%s never shows scrollbars', (selector) => {
     const body = ruleBody(selector)
