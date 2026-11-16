@@ -1,0 +1,13 @@
+.git
+.github
+.env
+.env.*
+.vscode
+.idea
+docs
+README.md
+**/node_modules
+**/dist
+**/coverage
+**/coverage.out
+**/coverage.html
