@@ -1,5 +1,25 @@
 import { describe, expect, it } from 'vitest'
-import { formatNumber } from './format'
+import { formatDisplay, formatNumber, groupThousands } from './format'
+
+describe('groupThousands', () => {
+  it.each([
+    ['0', '0'],
+    ['999', '999'],
+    ['1000', '1,000'],
+    ['-1234567', '-1,234,567'],
+    ['1234.5678', '1,234.5678'],
+    ['1234.', '1,234.'],
+    ['1.5e+21', '1.5e+21'],
+    ['Infinity', 'Infinity'],
+  ])('groups %s as %s', (input, expected) => {
+    expect(groupThousands(input)).toBe(expected)
+  })
+
+  it('formatDisplay rounds then groups', () => {
+    expect(formatDisplay(1234567.123456789)).toBe('1,234,567.12346')
+    expect(formatDisplay(0.1 + 0.2)).toBe('0.3')
+  })
+})
 
 describe('formatNumber', () => {
   it.each([

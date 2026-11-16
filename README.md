@@ -135,7 +135,7 @@ Measured on the last run before publishing:
 | --- | --- |
 | Go statements (all packages) | 90.7% (`calc` 100%, `api` 98.0%, `cmd/server` 56.7% because `main()` itself is not run in tests) |
 | Front end lines | 100% |
-| Front end branches | 99.52% |
+| Front end branches | 99.55% |
 
 ## 6. API reference
 
@@ -229,7 +229,7 @@ curl -s -X POST http://localhost:8080/api/v1/calculate \
 
 ## 8. Numeric precision
 
-The service uses `float64` and JSON numbers. The API returns the full value, so `0.1 + 0.2` returns `0.30000000000000004`. Only the screen rounds: it shows at most 12 significant digits and strips trailing zeros, so you see `0.3`. The exact value is still used if you carry on calculating. Very large or small numbers show in exponent form, such as `1.5e+21`.
+The service uses `float64` and JSON numbers. The API returns the full value, so `0.1 + 0.2` returns `0.30000000000000004`. Only the screen rounds: it shows at most 12 significant digits and strips trailing zeros, so you see `0.3`. The exact value is still used if you carry on calculating. Thousands are separated with commas on screen (`1,234,567`); the commas are display only and never sent to the API. Very large or small numbers show in exponent form, such as `1.5e+21`.
 
 `float64` is **not suitable for exact money arithmetic**, because many decimal fractions cannot be stored exactly. For real money, use whole numbers of the smallest unit (for example cents) or a decimal type, and send amounts as strings in the API.
 

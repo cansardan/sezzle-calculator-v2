@@ -1,4 +1,4 @@
-import { formatNumber } from './format'
+import { formatDisplay, groupThousands } from './format'
 
 export type BinaryOperator = 'add' | 'subtract' | 'multiply' | 'divide' | 'power' | 'percent'
 
@@ -74,16 +74,17 @@ function entryValue(state: CalculatorState): number {
 /** The number the display shows, as text. */
 export function displayText(state: CalculatorState): string {
   if (state.entry === '') {
-    return state.operator !== null && state.left !== null ? formatNumber(state.left) : '0'
+    return state.operator !== null && state.left !== null ? formatDisplay(state.left) : '0'
   }
-  return state.locked ? formatNumber(Number(state.entry)) : state.entry
+  if (state.locked) return formatDisplay(Number(state.entry))
+  return state.entry === '-0' ? '0' : groupThousands(state.entry)
 }
 
 /** The small line above the display, for example `15 % of 200`. */
 export function expressionText(state: CalculatorState): string {
   if (state.pending) return state.pending.expression
   if (state.operator !== null && state.left !== null) {
-    const base = `${formatNumber(state.left)} ${OPERATOR_SYMBOLS[state.operator]}`
+    const base = `${formatDisplay(state.left)} ${OPERATOR_SYMBOLS[state.operator]}`
     return state.entry === '' ? base : `${base} ${displayText(state)}`
   }
   return state.lastExpression
@@ -131,7 +132,7 @@ function pressOperator(state: CalculatorState, operator: BinaryOperator): Calcul
   if (state.operator !== null && state.left !== null) {
     if (state.entry === '') return { ...state, operator }
     const b = entryValue(state)
-    const expression = `${formatNumber(state.left)} ${OPERATOR_SYMBOLS[state.operator]} ${formatNumber(b)}`
+    const expression = `${formatDisplay(state.left)} ${OPERATOR_SYMBOLS[state.operator]} ${formatDisplay(b)}`
     return startRequest(state, { operation: state.operator, a: state.left, b }, expression, { kind: 'chain', operator })
   }
   const left = entryValue(state)
@@ -142,13 +143,13 @@ function pressOperator(state: CalculatorState, operator: BinaryOperator): Calcul
 function pressEquals(state: CalculatorState): CalculatorState {
   if (state.operator === null || state.left === null || state.entry === '') return state
   const b = entryValue(state)
-  const expression = `${formatNumber(state.left)} ${OPERATOR_SYMBOLS[state.operator]} ${formatNumber(b)}`
+  const expression = `${formatDisplay(state.left)} ${OPERATOR_SYMBOLS[state.operator]} ${formatDisplay(b)}`
   return startRequest(state, { operation: state.operator, a: state.left, b }, expression, { kind: 'result' })
 }
 
 function pressSqrt(state: CalculatorState): CalculatorState {
   const a = state.entry === '' && state.operator !== null && state.left !== null ? state.left : entryValue(state)
-  return startRequest(state, { operation: 'sqrt', a }, `√${formatNumber(a)}`, { kind: 'result' })
+  return startRequest(state, { operation: 'sqrt', a }, `√${formatDisplay(a)}`, { kind: 'result' })
 }
 
 function paste(state: CalculatorState, text: string): CalculatorState {

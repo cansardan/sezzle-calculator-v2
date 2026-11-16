@@ -157,7 +157,8 @@ body {
 }
 
 .key:active:not(:disabled) {
-  transform: scale(0.97);
+  filter: brightness(0.8);
+  transform: scale(0.95);
 }
 
 .key:disabled {

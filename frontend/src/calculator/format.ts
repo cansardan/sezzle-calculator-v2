@@ -18,3 +18,19 @@ export function formatNumber(value: number): string {
   }
   return String(rounded)
 }
+
+/**
+ * Inserts thousands separators into the integer part of a plain decimal
+ * string (typed or formatted). Exponent notation and non-numbers are left alone.
+ */
+export function groupThousands(text: string): string {
+  const match = /^(-?)(\d+)(\.\d*)?$/.exec(text)
+  if (!match) return text
+  const [, sign = '', whole = '', fraction = ''] = match
+  return `${sign}${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}${fraction}`
+}
+
+/** Display text for a number: rounded, with thousands separators. */
+export function formatDisplay(value: number): string {
+  return groupThousands(formatNumber(value))
+}

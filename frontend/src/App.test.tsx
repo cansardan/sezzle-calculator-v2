@@ -86,7 +86,7 @@ describe('App', () => {
   it('sends power as a^b', async () => {
     const { calculate, press, result } = setup(() => Promise.resolve(1024))
     await press('2', 'power', '1', '0', 'equals')
-    await waitFor(() => expect(result()).toBe('1024'))
+    await waitFor(() => expect(result()).toBe('1,024'))
     expect(calculate.mock.calls[0][0]).toEqual({ operation: 'power', a: 2, b: 10 })
   })
 
@@ -321,7 +321,7 @@ describe('App', () => {
     it('fills the current entry with a valid number', () => {
       const { result } = setup()
       pasteText(' 1234.5\n')
-      expect(result()).toBe('1234.5')
+      expect(result()).toBe('1,234.5')
     })
 
     it.each(['', 'hello', 'Infinity', '0xFF', 'NaN'])('rejects %j without making a request', (text) => {
@@ -379,7 +379,7 @@ describe('App', () => {
 
     it('shrinks very long values via a size class', async () => {
       const { press } = setup()
-      await press('1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', '3')
+      await press('1', '2', '3', '4', '5', '6', '7', '8', '9', '0')
       expect(screen.getByTestId('result')).toHaveClass('display__value--sm')
       await press('clear', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', 'decimal point', '3', '4', '5', '6')
       expect(screen.getByTestId('result')).toHaveClass('display__value--xs')

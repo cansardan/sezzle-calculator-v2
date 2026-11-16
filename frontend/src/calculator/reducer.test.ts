@@ -49,13 +49,13 @@ describe('typing numbers', () => {
     const state = run(digits('12345678901234567890'))
     expect(state.entry).toBe('1234567890123456')
     expect(state.entry.length).toBe(MAX_DIGITS)
-    expect(displayText(run([...digits('1234567890123456'), { type: 'decimal' }]))).toBe('1234567890123456')
+    expect(displayText(run([...digits('1234567890123456'), { type: 'decimal' }]))).toBe('1,234,567,890,123,456')
   })
 
   it('does not count the sign or the point towards the limit', () => {
     const state = run([...digits('0.123456789012345'), { type: 'toggleSign' }])
     expect(state.entry).toBe('-0.123456789012345')
-    expect(displayText(run([...digits('123456789012345'), { type: 'decimal' }, { type: 'digit', digit: '6' }]))).toBe('123456789012345.6')
+    expect(displayText(run([...digits('123456789012345'), { type: 'decimal' }, { type: 'digit', digit: '6' }]))).toBe('123,456,789,012,345.6')
   })
 
   it('toggles the sign', () => {
@@ -190,6 +190,22 @@ describe('operators and requests', () => {
   it('treats -0 as 0 on display', () => {
     const state = resolveWith(run([...digits('0'), op('multiply'), ...digits('5'), equals]), -0)
     expect(displayText(state)).toBe('0')
+  })
+
+  it('shows 0, not -0, when the sign is toggled on an empty or zero entry', () => {
+    expect(displayText(run([{ type: 'toggleSign' }]))).toBe('0')
+    expect(displayText(run([...digits('0'), { type: 'toggleSign' }]))).toBe('0')
+  })
+
+  it('groups thousands in typed numbers, results and the expression line', () => {
+    const typing = run([...digits('1234567.5')])
+    expect(displayText(typing)).toBe('1,234,567.5')
+    expect(displayText(run([...digits('1234.')]))).toBe('1,234.')
+    expect(displayText(run([...digits('1234'), { type: 'toggleSign' }]))).toBe('-1,234')
+    const pending = run([...digits('1500'), op('add'), ...digits('2500'), equals])
+    expect(pending.pending?.request).toEqual({ operation: 'add', a: 1500, b: 2500 })
+    expect(expressionText(pending)).toBe('1,500 + 2,500')
+    expect(displayText(resolveWith(pending, 4000))).toBe('4,000')
   })
 
   it('sends a unary request for square root', () => {
