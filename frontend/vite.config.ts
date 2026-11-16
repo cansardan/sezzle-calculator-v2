@@ -12,7 +12,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    css: false,
+    css: { include: /styles\.css/ },
     coverage: {
       provider: 'v8',
       reporter: ['text-summary', 'html', 'lcov', 'json-summary'],

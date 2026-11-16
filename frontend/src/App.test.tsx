@@ -382,7 +382,21 @@ describe('App', () => {
       await press('1', '2', '3', '4', '5', '6', '7', '8', '9', '0')
       expect(screen.getByTestId('result')).toHaveClass('display__value--sm')
       await press('clear', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', 'decimal point', '3', '4', '5', '6')
-      expect(screen.getByTestId('result')).toHaveClass('display__value--xs')
+      expect(screen.getByTestId('result')).toHaveClass('display__value--xxxs')
+    })
+
+    it.each([
+      [999999999999 * 999999999999, '9.99999999998e+23', 'display__value--xxs'],
+      [-1.23456789012e308, '-1.23456789012e+308', 'display__value--xxs'],
+      [123456789012345, '123,456,789,012,000', 'display__value--xxs'],
+      [1e-7, '1e-7', ''],
+    ])('shows large result %s as %s with a matching size class and no scrolling', async (value, text, sizeClass) => {
+      const { press, result } = setup(() => Promise.resolve(value))
+      await press('2', 'multiply', '3', 'equals')
+      await waitFor(() => expect(result()).toBe(text))
+      const element = screen.getByTestId('result')
+      expect(element.className.trim()).toBe(`display__value ${sizeClass}`.trim())
+      expect(element.scrollWidth).toBeLessThanOrEqual(element.clientWidth)
     })
   })
 
