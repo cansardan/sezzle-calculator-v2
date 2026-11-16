@@ -90,7 +90,7 @@ Settings (environment variables): `PORT` (default `8080`) and `STATIC_DIR` (fold
 - `√` works on the number on screen straight away.
 - `% of` means "a percent of b": `15 % of 200` is `30`.
 - After a result, typing a digit starts a new number. Pressing an operator carries on from the result.
-- While the service is working you see "Calculating…" and most keys are switched off. `C` still works and cancels the request.
+- Calculations are normally instant, so nothing changes on screen. Only if the service takes longer than one second do you see "Calculating…" and most keys switch off. Either way, extra key presses are ignored until the answer arrives. `C` always works and cancels the request.
 - Errors from the service appear in a red box under the display, and the expression stays visible.
 - You can paste a number (Ctrl+V / Cmd+V). Anything that is not a plain decimal number is refused.
 

@@ -6,11 +6,16 @@ import { ApiError, NetworkError, UNREACHABLE_MESSAGE, type CalculateRequest, typ
 
 type CalculateFn = (request: CalculateRequest, signal?: AbortSignal) => Promise<number>
 
-function setup(impl: CalculateFn = () => Promise.resolve(0)) {
+interface SetupOptions {
+  slowAfterMs?: number
+  fakeTimers?: boolean
+}
+
+function setup(impl: CalculateFn = () => Promise.resolve(0), { slowAfterMs = 0, fakeTimers = false }: SetupOptions = {}) {
   const calculate = vi.fn<CalculateFn>(impl)
   const api: CalculatorApi = { calculate }
-  const user = userEvent.setup()
-  render(<App api={api} />)
+  const user = fakeTimers ? userEvent.setup({ advanceTimers: vi.advanceTimersByTime }) : userEvent.setup()
+  render(<App api={api} slowAfterMs={slowAfterMs} />)
 
   async function press(...names: string[]) {
     for (const name of names) await user.click(screen.getByRole('button', { name }))
@@ -151,12 +156,59 @@ describe('App', () => {
   })
 
   describe('while a request is pending', () => {
+    it('shows nothing and keeps the keys enabled until the request is slow, then shows Calculating…', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+      try {
+        const pending = deferred<number>()
+        const { press, result } = setup(() => pending.promise, { slowAfterMs: 1000, fakeTimers: true })
+        await press('1', 'add', '2', 'equals')
+
+        expect(result()).toBe('2')
+        expect(screen.getByRole('button', { name: 'equals' })).toBeEnabled()
+
+        await act(async () => {
+          vi.advanceTimersByTime(900)
+        })
+        expect(result()).toBe('2')
+
+        await act(async () => {
+          vi.advanceTimersByTime(200)
+        })
+        expect(result()).toBe('Calculating…')
+        expect(screen.getByRole('button', { name: 'equals' })).toBeDisabled()
+
+        await act(async () => pending.resolve(3))
+        expect(result()).toBe('3')
+        expect(screen.getByRole('button', { name: 'equals' })).toBeEnabled()
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('never shows Calculating… when the response is fast', async () => {
+      const { press, result } = setup(() => Promise.resolve(19), { slowAfterMs: 1000 })
+      await press('1', '2', 'add', '7', 'equals')
+
+      await waitFor(() => expect(result()).toBe('19'))
+      expect(screen.queryByText('Calculating…')).not.toBeInTheDocument()
+    })
+
+    it('still ignores extra key presses during the quiet period', async () => {
+      const pending = deferred<number>()
+      const { calculate, press, user } = setup(() => pending.promise, { slowAfterMs: 1000 })
+      await press('1', 'add', '2', 'equals')
+      await user.keyboard('=')
+      await user.keyboard('{Enter}')
+      expect(calculate).toHaveBeenCalledOnce()
+      await act(async () => pending.resolve(3))
+    })
+
     it('shows Calculating…, disables the keys but not C, and does not send duplicates', async () => {
       const pending = deferred<number>()
       const { calculate, press, result, user } = setup(() => pending.promise)
       await press('1', 'add', '2', 'equals')
 
-      expect(result()).toBe('Calculating…')
+      await waitFor(() => expect(result()).toBe('Calculating…'))
       expect(screen.getByRole('button', { name: 'equals' })).toBeDisabled()
       expect(screen.getByRole('button', { name: '5' })).toBeDisabled()
       expect(screen.getByRole('button', { name: 'square root' })).toBeDisabled()
