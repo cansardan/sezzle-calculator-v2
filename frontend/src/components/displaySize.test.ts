@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import css from '../styles.css?raw'
 import { formatDisplay } from '../calculator/format'
-import { expressionSizeClass, valueSizeClass } from './displaySize'
+import { textWidthEm } from './displaySize'
 
-const MIN_DISPLAY_WIDTH_PX = 240
 const REM_PX = 16
-const CHAR_WIDTH_EM = 0.62
+const MIN_DISPLAY_WIDTH_PX = 240
 
 function ruleBody(selector: string): string {
   const escaped = selector.replace(/[.]/g, '\\.')
@@ -14,24 +13,12 @@ function ruleBody(selector: string): string {
   return match[1] ?? ''
 }
 
-function fontSizePx(selector: string): number {
-  const match = /font-size:\s*([\d.]+)rem/.exec(ruleBody(selector))
-  if (!match) throw new Error(`no rem font-size for ${selector}`)
-  return Number(match[1]) * REM_PX
-}
-
-function valueFontPx(text: string): number {
-  const className = valueSizeClass(text)
-  return fontSizePx(className === '' ? '.display__value' : `.${className}`)
-}
-
 const LARGE_VALUES = [
   0,
   -0.5,
+  22876792455000,
   1234567890,
   -1234567890,
-  1234567890123456,
-  -1234567890123456,
   999999999999 * 999999999999,
   -999999999999 * 999999999999,
   1e21,
@@ -44,42 +31,54 @@ const LARGE_VALUES = [
   123456.789012,
 ]
 
-describe('display sizing', () => {
-  it.each(LARGE_VALUES)('fits %s on the narrowest screen without scrolling', (value) => {
-    const text = formatDisplay(value)
-    const estimatedWidth = text.length * CHAR_WIDTH_EM * valueFontPx(text)
-    expect(estimatedWidth).toBeLessThanOrEqual(MIN_DISPLAY_WIDTH_PX)
+describe('textWidthEm', () => {
+  it('never returns less than 1em, even for empty text', () => {
+    expect(textWidthEm('')).toBe(1)
   })
 
-  it('also fits the longest number you can type (16 digits, sign and commas)', () => {
-    const text = '-1,234,567,890,123,456'
-    expect(text.length * CHAR_WIDTH_EM * valueFontPx(text)).toBeLessThanOrEqual(MIN_DISPLAY_WIDTH_PX)
+  it('counts digits wider than separators', () => {
+    expect(textWidthEm('1,234')).toBeCloseTo(4 * 0.7 + 0.38, 2)
+    expect(textWidthEm('0.5')).toBeCloseTo(0.7 + 0.38 + 0.7, 2)
   })
 
-  it('never makes longer text bigger than shorter text', () => {
-    const sizes = Array.from({ length: 30 }, (_, i) => valueFontPx('1'.repeat(i + 1)))
-    for (let i = 1; i < sizes.length; i++) expect(sizes[i]).toBeLessThanOrEqual(sizes[i - 1] ?? Infinity)
+  it('counts operators and spaces in expressions', () => {
+    expect(textWidthEm('12 + 7')).toBeCloseTo(3 * 0.7 + 2 * 0.35 + 0.84, 2)
+    expect(textWidthEm('2 \u00d7 3')).toBeGreaterThan(textWidthEm('2 - 3'))
   })
 
-  it('shrinks the expression line for long expressions', () => {
-    expect(expressionSizeClass('12 + 7')).toBe('')
-    expect(expressionSizeClass('999999999999 × 999999999999')).toBe('')
-    expect(expressionSizeClass('9.99999999998e+23 × 9.99999999998e+23')).toBe('display__expression--xs')
-    expect(expressionSizeClass('1,234,567,890 × 1,234,567,890')).toBe('display__expression--sm')
+  it('grows with longer text', () => {
+    const widths = Array.from({ length: 30 }, (_, i) => textWidthEm('1'.repeat(i + 1)))
+    for (let i = 1; i < widths.length; i++) expect(widths[i]).toBeGreaterThan(widths[i - 1] ?? 0)
   })
 })
 
-describe('display CSS height', () => {
-  const sizeClasses = [
-    '.display__value--md',
-    '.display__value--sm',
-    '.display__value--xs',
-    '.display__value--xxs',
-    '.display__value--xxxs',
-    '.display__value--busy',
-    '.display__expression--sm',
-    '.display__expression--xs',
-  ]
+describe('result font size', () => {
+  const maxFontPx = Number(/min\(([\d.]+)rem/.exec(ruleBody('.display__value'))?.[1]) * REM_PX
+
+  it.each(LARGE_VALUES)('fits %s on the narrowest screen', (value) => {
+    const text = formatDisplay(value)
+    const fontPx = Math.min(maxFontPx, MIN_DISPLAY_WIDTH_PX / textWidthEm(text))
+    expect(textWidthEm(text) * fontPx).toBeLessThanOrEqual(MIN_DISPLAY_WIDTH_PX + 0.001)
+  })
+
+  it('uses most of the display width for a typical long number', () => {
+    const text = formatDisplay(22876792455000)
+    const fontPx = Math.min(maxFontPx, 280 / textWidthEm(text))
+    expect(fontPx).toBeGreaterThanOrEqual(22)
+  })
+
+  it('keeps full size for short numbers', () => {
+    expect(Math.min(maxFontPx, 280 / textWidthEm('1,234'))).toBe(maxFontPx)
+  })
+})
+
+describe('display CSS', () => {
+  it('sizes the value and expression from the display width and text width', () => {
+    expect(ruleBody('.display')).toMatch(/container-type:\s*inline-size/)
+    for (const selector of ['.display__value', '.display__expression']) {
+      expect(ruleBody(selector)).toMatch(/font-size:[^;]*100cqw\s*\/\s*var\(--text-em/)
+    }
+  })
 
   it.each(['.display__value', '.display__expression'])(
     '%s has a fixed height equal to its line height, so font changes never resize the display',
@@ -93,17 +92,10 @@ describe('display CSS height', () => {
     },
   )
 
-  it.each(sizeClasses)('%s only changes font size, never height', (selector) => {
-    expect(ruleBody(selector)).not.toMatch(/height/)
+  it('keeps the busy state from changing height', () => {
+    expect(ruleBody('.display__value--busy')).not.toMatch(/height/)
   })
 
-  it('keeps the largest value font inside the fixed height', () => {
-    const height = Number(/(?:^|[\s;])height:\s*([\d.]+)rem/.exec(ruleBody('.display__value'))?.[1]) * REM_PX
-    expect(fontSizePx('.display__value')).toBeLessThanOrEqual(height)
-  })
-})
-
-describe('display CSS', () => {
   it.each(['.display__value', '.display__expression'])('%s never shows scrollbars', (selector) => {
     const body = ruleBody(selector)
     expect(body).toMatch(/overflow:\s*hidden/)

@@ -377,26 +377,37 @@ describe('App', () => {
       expect(expression()).toBe('')
     })
 
-    it('shrinks very long values via a size class', async () => {
+    const textEm = () => Number(screen.getByTestId('result').style.getPropertyValue('--text-em'))
+
+    it('passes the estimated text width to the display so long values shrink to fit', async () => {
       const { press } = setup()
-      await press('1', '2', '3', '4', '5', '6', '7', '8', '9', '0')
-      expect(screen.getByTestId('result')).toHaveClass('display__value--sm')
+      await press('1')
+      const short = textEm()
+      await press('2', '3', '4', '5', '6', '7', '8', '9', '0')
+      const long = textEm()
       await press('clear', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '1', '2', 'decimal point', '3', '4', '5', '6')
-      expect(screen.getByTestId('result')).toHaveClass('display__value--xxxs')
+      expect(short).toBeGreaterThan(0)
+      expect(long).toBeGreaterThan(short)
+      expect(textEm()).toBeGreaterThan(long)
     })
 
     it.each([
-      [999999999999 * 999999999999, '9.99999999998e+23', 'display__value--xxs'],
-      [-1.23456789012e308, '-1.23456789012e+308', 'display__value--xxs'],
-      [123456789012345, '123,456,789,012,000', 'display__value--xxs'],
-      [1e-7, '1e-7', ''],
-    ])('shows large result %s as %s with a matching size class and no scrolling', async (value, text, sizeClass) => {
+      [999999999999 * 999999999999, '9.99999999998e+23'],
+      [-1.23456789012e308, '-1.23456789012e+308'],
+      [22876792455000, '22,876,792,455,000'],
+      [1e-7, '1e-7'],
+    ])('shows large result %s as %s and sizes it from its width', async (value, text) => {
       const { press, result } = setup(() => Promise.resolve(value))
       await press('2', 'multiply', '3', 'equals')
       await waitFor(() => expect(result()).toBe(text))
-      const element = screen.getByTestId('result')
-      expect(element.className.trim()).toBe(`display__value ${sizeClass}`.trim())
-      expect(element.scrollWidth).toBeLessThanOrEqual(element.clientWidth)
+      expect(textEm()).toBeGreaterThanOrEqual(text.length * 0.38)
+      expect(screen.getByTestId('result').className).toBe('display__value')
+    })
+
+    it('sizes the expression line from its own text width', async () => {
+      const { press } = setup(() => Promise.resolve(22876792455000))
+      await press('2', 'multiply', '3', 'equals')
+      await waitFor(() => expect(screen.getByTestId('expression').style.getPropertyValue('--text-em')).not.toBe(''))
     })
   })
 

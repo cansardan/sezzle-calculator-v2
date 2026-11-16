@@ -1,4 +1,5 @@
-import { expressionSizeClass, valueSizeClass } from './displaySize'
+import type { CSSProperties } from 'react'
+import { textWidthEm } from './displaySize'
 
 interface DisplayProps {
   expression: string
@@ -7,19 +8,25 @@ interface DisplayProps {
   error: string | null
 }
 
+function widthVar(text: string): CSSProperties {
+  return { '--text-em': textWidthEm(text) } as CSSProperties
+}
+
 export function Display({ expression, value, calculating, error }: DisplayProps) {
   const shown = calculating ? 'Calculating…' : value
   return (
     <div className="display">
       <div
-        className={`display__expression ${expressionSizeClass(expression)}`}
+        className="display__expression"
+        style={widthVar(expression)}
         title={expression || undefined}
         data-testid="expression"
       >
         {expression || '\u00a0'}
       </div>
       <div
-        className={`display__value ${calculating ? 'display__value--busy' : valueSizeClass(shown)}`}
+        className={`display__value${calculating ? ' display__value--busy' : ''}`}
+        style={widthVar(shown)}
         aria-live="polite"
         aria-atomic="true"
         data-testid="result"
