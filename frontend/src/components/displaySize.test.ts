@@ -37,12 +37,12 @@ describe('textWidthEm', () => {
   })
 
   it('counts digits wider than separators', () => {
-    expect(textWidthEm('1,234')).toBeCloseTo(4 * 0.7 + 0.38, 2)
-    expect(textWidthEm('0.5')).toBeCloseTo(0.7 + 0.38 + 0.7, 2)
+    expect(textWidthEm('1,234')).toBeCloseTo(4 * 0.7 + 0.38 - 5 * 0.1, 2)
+    expect(textWidthEm('0.5')).toBeCloseTo(0.7 + 0.38 + 0.7 - 3 * 0.1, 2)
   })
 
   it('counts operators and spaces in expressions', () => {
-    expect(textWidthEm('12 + 7')).toBeCloseTo(3 * 0.7 + 2 * 0.35 + 0.84, 2)
+    expect(textWidthEm('12 + 7')).toBeCloseTo(3 * 0.7 + 2 * 0.35 + 0.84 - 6 * 0.1, 2)
     expect(textWidthEm('2 \u00d7 3')).toBeGreaterThan(textWidthEm('2 - 3'))
   })
 

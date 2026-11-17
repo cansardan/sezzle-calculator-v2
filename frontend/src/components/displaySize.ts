@@ -11,6 +11,8 @@ const WIDE_EM = 0.84
 const PERCENT_EM = 1.0
 const OTHER_EM = 0.7
 
+const ADJUST = 0.1
+
 function charWidthEm(char: string): number {
   if (char >= '0' && char <= '9') return DIGIT_EM
   switch (char) {
@@ -38,6 +40,6 @@ function charWidthEm(char: string): number {
 /** Estimated width of `text` in em. The CSS divides the display width by this to size the font. */
 export function textWidthEm(text: string): number {
   let total = 0
-  for (const char of text) total += charWidthEm(char)
+  for (const char of text) total += charWidthEm(char) - ADJUST
   return Math.max(Math.round(total * 100) / 100, 1)
 }

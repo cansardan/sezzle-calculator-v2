@@ -93,8 +93,9 @@ body {
 }
 
 .display__alert {
-  min-height: 3.2em;
+  height: 3.6rem;
   padding-top: 6px;
+  overflow: hidden;
 }
 
 .display__alert p {
