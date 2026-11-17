@@ -283,7 +283,3 @@ The image is **not published** to any registry. There is **no live demo**; run i
 - **"Cannot connect to the Docker daemon".** Docker Desktop is not running. Start it and try again.
 - **Wrong Node or Go version.** Check with `node --version` and `go version`. Node must be 22 or newer and Go 1.27 or newer.
 - **The page says "Can't reach the calculator service".** The backend is not running. Start it (section 3) and press `=` again.
-
-## 11. AI prompts
-
-The prompts used to build this are in [`docs/AI_PROMPT.md`](docs/AI_PROMPT.md) (the full assignment prompt) and [`docs/AI_PROMPTS.md`](docs/AI_PROMPTS.md) (other prompts used along the way).
