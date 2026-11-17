@@ -50,6 +50,44 @@ You need two tools. These are the versions this project was built and tested wit
 | Go | 1.27.4 (1.27 or newer) | <https://go.dev/dl/> | `go version` |
 | Node.js | 22 or newer (tested with 22.23.5) | <https://nodejs.org/> | `node --version` |
 
+Check what you have first. If both commands print the versions above (or newer), skip to "Terminal 1".
+
+### Install Go 1.27.4 and Node.js 22
+
+**macOS and Windows.** Download the installers from the links in the table, run them, then **open a new terminal** and check the versions. (With a package manager: `brew install go node@22` on macOS, or `winget install GoLang.Go OpenJS.NodeJS.LTS` on Windows.)
+
+**Linux (Ubuntu/Debian, no `sudo` needed).** Do not use `apt install golang`: Ubuntu 22.04 ships Go 1.18, which is too old for this project. These steps install into your home folder and leave the system tools alone. They were tested on Ubuntu 22.04 (WSL, x86-64). On an ARM machine, replace `amd64` with `arm64`.
+
+1. Install Go:
+
+   ```bash
+   curl -fsSLO https://go.dev/dl/go1.27.4.linux-amd64.tar.gz
+   echo "7226736c2339719cda28fbf3a54d71aa63bcefe376e98cef00034268dab24840  go1.27.4.linux-amd64.tar.gz" | sha256sum -c -
+   mkdir -p ~/.local/go1.27.4 ~/.local/bin
+   tar -C ~/.local/go1.27.4 --strip-components=1 -xzf go1.27.4.linux-amd64.tar.gz
+   ln -sf ~/.local/go1.27.4/bin/go ~/.local/bin/go
+   ln -sf ~/.local/go1.27.4/bin/gofmt ~/.local/bin/gofmt
+   rm go1.27.4.linux-amd64.tar.gz
+   ```
+
+   The `sha256sum` line must print `OK`. Make sure `~/.local/bin` comes before `/usr/bin` in your `PATH` (on Ubuntu it does by default once the folder exists and you open a new terminal), then run `go version`. It should say `go1.27.4`.
+
+2. Install Node.js 22 with [nvm](https://github.com/nvm-sh/nvm) (skip the first command if you already have nvm):
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+   ```
+
+   Open a new terminal, then:
+
+   ```bash
+   nvm install 22.23.5
+   nvm use 22.23.5
+   node --version
+   ```
+
+   It should print `v22.23.5`. `nvm use` only affects the terminal you run it in, so run it again in the second terminal (or run `nvm alias default 22.23.5` once to make it permanent).
+
 Use two terminals (Terminal on macOS/Linux, PowerShell on Windows), both opened in the project folder.
 
 **Terminal 1: the backend.**
